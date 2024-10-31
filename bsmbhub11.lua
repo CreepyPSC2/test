@@ -1,5 +1,5 @@
 --// Script Location
-local ScriptV: number = 1.1;
+local ScriptV: number = 1.2;
 local HUDLocation = game:GetService("CoreGui");
 
 --// GUI Setup
@@ -70,7 +70,7 @@ _Credit.BorderSizePixel = 0
 _Credit.Position = UDim2.new(0.100828171, 0, 9.43778324, 0)
 _Credit.Size = UDim2.new(0.791568458, 0, 0.46321395, 0)
 _Credit.Font = Enum.Font.FredokaOne
-_Credit.Text = "Forked from: Quotas Hub"
+_Credit.Text = "Fork of Quotas Hub | Modified for Rework"
 _Credit.TextColor3 = Color3.new(1, 1, 1)
 _Credit.TextScaled = true
 _Credit.TextSize = 14
@@ -84,7 +84,7 @@ _TextLabel.BorderSizePixel = 0
 _TextLabel.Position = UDim2.new(0.279591769, 0, 0.114285715, 0)
 _TextLabel.Size = UDim2.new(0.439999998, 0, 0.771428585, 0)
 _TextLabel.Font = Enum.Font.FredokaOne
-_TextLabel.Text = "BSMB Hub"..(if ScriptV then " v"..tostring(ScriptV) else "")
+_TextLabel.Text = (getgenv().DisplayName or "BSMB").." Hub"..(if ScriptV then " v"..tostring(ScriptV) else "")
 _TextLabel.TextColor3 = Color3.new(1, 1, 1)
 _TextLabel.TextScaled = true
 _TextLabel.TextSize = 14
@@ -98,7 +98,7 @@ _Open.BorderSizePixel = 0
 _Open.Position = UDim2.new(0.15, 0,0.025, 0)
 _Open.Size = UDim2.new(0.1, 0, 0.1, 0)
 _Open.Font = Enum.Font.FredokaOne
-_Open.Text = "Open BSMB"
+_Open.Text = "Open Hub"
 _Open.TextColor3 = Color3.new(1, 1, 1)
 _Open.TextScaled = true
 _Open.TextSize = 14
@@ -309,6 +309,8 @@ local function BSMBHub()
 	local OpenKeybind = Enum.KeyCode.RightBracket
 	local Blur = script.ModBlur
 	local BlurSize = 12
+	local WeaponsFold = ReplicatedStorage.Weapons
+	local WepClone = WeaponsFold:Clone()
 	local WsSignal
 	local InProgress = false
 	local Closing = false
@@ -481,7 +483,7 @@ local function BSMBHub()
 		script.Parent.Main.Visible = false
 		Open.Visible = false
 		controlBlur(false)
-		message('You have closed BSMB Hub, all your mods have been disabled as well.', 5)
+		message('You have closed '..getgenv().DisplayName or "BSMB"..' Hub, all your mods have been disabled as well.', 5)
 		for i, v in pairs(game.Lighting:GetChildren()) do
 			if v.name == "ModBlur" then
 				v:Destroy()
@@ -496,7 +498,7 @@ local function BSMBHub()
 		coroutine.wrap(function()
 			controlBlur(false)
 		end)()
-		message('Use '..OpenGui.KeyName..' (aka "'..OpenGui.KeyString..'") to open BSMB Hub again.', 2)
+		message('Use '..OpenGui.KeyName..' (aka "'..OpenGui.KeyString..'") to open '..getgenv().DisplayName or "BSMB"..' Hub again.', 2)
 	end)
 	Open.Activated:Connect(function()
 		if Closing then return end
@@ -621,49 +623,65 @@ local function BSMBHub()
 		end))
 	end
 	function toggleInfAmmo()
-		while toggles["Gun"]["InfAmmo"] do
-			game:GetService("Players").LocalPlayer.PlayerGui.GUI.Client.Variables.ammocount.Value = 999
-			game:GetService("Players").LocalPlayer.PlayerGui.GUI.Client.Variables.ammocount2.Value = 999
-			wait()
-		end
+		coroutine.wrap(function()
+			while toggles["Gun"]["InfAmmo"] do
+				game:GetService("Players").LocalPlayer.PlayerGui.GUI.Client.Variables.ammocount.Value = 999
+				game:GetService("Players").LocalPlayer.PlayerGui.GUI.Client.Variables.ammocount2.Value = 999
+				task.wait()
+			end
+		end)()
 	end
 	function toggleFireRate()
-		while toggles["Gun"]["FirerateToggle"] do
-			for i, v in pairs(ReplicatedStorage.Weapons:GetDescendants()) do
-				if v.Name == "Auto" then
-					v.Value = true
+		coroutine.wrap(function()
+			while toggles["Gun"]["FirerateToggle"] do
+				for i, v in pairs(WeaponsFold:GetDescendants()) do
+					if v.Name == "Auto" then
+						v.Value = true
+					end
+					if v.Name == "FireRate" then
+						v.Value = 0.02
+					end
 				end
-				if v.Name == "FireRate" then
-					v.Value = 0.02
-				end
+				task.wait(5)
 			end
-			wait(5)
+		end)()
+		for i, v in pairs(WepClone:GetChildren()) do
+			WeaponsFold[v.Name]:Destroy()
+			v.Parent = WeaponsFold
 		end
 	end
 	function toggleRecoil()
-		while toggles["Gun"]["NoRecoil"] do
-			for i, v in pairs(ReplicatedStorage.Weapons:GetDescendants()) do
-				if v.Name == "RecoilControl" then
-					v.Value = 0
+		coroutine.wrap(function()
+			while toggles["Gun"]["NoRecoil"] do
+				for i, v in pairs(WeaponsFold:GetDescendants()) do
+					if v.Name == "RecoilControl" then
+						v.Value = 0
+					end
+					if v.Name == "MaxSpread" then
+						v.Value = 0
+					end
 				end
-				if v.Name == "MaxSpread" then
-					v.Value = 0
-				end
+			task.wait(5)
 			end
-			wait(5)
+		end)()
+		for i, v in pairs(WepClone:GetChildren()) do
+			WeaponsFold[v.Name]:Destroy()
+			v.Parent = WeaponsFold
 		end
 	end
 	function toggleSonicSpeed()
-		local Humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid;
+		local plr = game.Players.LocalPlayer
 		if toggles["Player"]["SonicSpeed"] then
-			WsSignal = Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+			if plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") then
+				local Humanoid = plr.Character.Humanoid;
+ 				WsSignal = Humanoid.Changed:Connect(function()
+					Humanoid.WalkSpeed = mods["Player"]["SonicSpeed"].Speed
+				end)
 				Humanoid.WalkSpeed = mods["Player"]["SonicSpeed"].Speed
-			end)
-			Humanoid.WalkSpeed = mods["Player"]["SonicSpeed"].Speed
+			end
 		else
 			if WsSignal then
 				WsSignal:Disconnect()
-				Humanoid.WalkSpeed = 16
 			end
 		end
 	end

@@ -164,7 +164,7 @@ local NewGuiPart162 = Instance.new("BindableFunction")
 local NewGuiPart163 = Instance.new("BindableEvent")
 -- Properties
 
-NewGuiPart1.Name = "Dex"
+NewGuiPart1.Name = "RobloxHomeGui"
 
 NewGuiPart2.Name = "PropertiesFrame"
 NewGuiPart2.Parent = NewGuiPart1

@@ -1,5 +1,5 @@
 --// Script Location
-local ScriptV: number = 1.4;
+local ScriptV: number = 1.5;
 local HUDLocation = game:GetService("CoreGui");
 if game:GetService("RunService"):IsStudio() then
 	HUDLocation = game.Players.LocalPlayer.PlayerGui

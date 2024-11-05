@@ -547,10 +547,11 @@ local function BSMBHub()
 				newTemplate.ButtonText.Text = mod.Display
 				newTemplate.ButtonToggle.Activated:Connect(function()
                     if mods[i][modName].StuckOn and toggles[i][modName] == true then
-					   warn("BSMB Hub: Mod "..tostirng(mods[i][modName].Display).." can't be disabled.")
+					    warn("BSMB Hub: Mod "..tostirng(mods[i][modName].Display).." can't be disabled.")
+			            return
                     end
-                     toggles[i][modName] = not toggles[i][modName]
-                        mod.Callback()
+                    toggles[i][modName] = not toggles[i][modName]
+                    mod.Callback()
 					if toggles[i][modName] then
 						newTemplate.ButtonToggle.Image = 'http://www.roblox.com/asset/?id='..ToggledImages["Enabled"]
 					else
@@ -630,7 +631,7 @@ local function BSMBHub()
         local char = target.Character
         local mhs = toggles["Aim"]["MoreHeadshots"] == true
 		local headhitbox = (isRolve and char.HeadHB or char.Head)
-		local hbSize = getgenv().HitboxSize or 13
+		local hbSize = getgenv().HitboxSize or 12
 		if toggles["Aim"]["TeammateESP"] then
 			if target.Team == plr.Team then
 				--	warn("Player is teammate: "..target.Name)

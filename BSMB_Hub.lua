@@ -1,11 +1,10 @@
-getgenv().HitboxSize = 12
-
 --// Script Location
-local ScriptV: number = 1.3;
+local ScriptV: number = 1.4;
 local HUDLocation = game:GetService("CoreGui");
 if game:GetService("RunService"):IsStudio() then
 	HUDLocation = game.Players.LocalPlayer.PlayerGui
 end
+print('BSMB Hub V'..tostring(ScriptV)..": Loading")
 
 --// GUI Setup
 local _BSMBHub = Instance.new("ScreenGui")
@@ -75,7 +74,7 @@ _Credit.BorderSizePixel = 0
 _Credit.Position = UDim2.new(0.100828171, 0, 9.43778324, 0)
 _Credit.Size = UDim2.new(0.791568458, 0, 0.46321395, 0)
 _Credit.Font = Enum.Font.FredokaOne
-_Credit.Text = "Forked from: Quotas Hub"
+_Credit.Text = "A forked and less autistic version of Quotas Hub."
 _Credit.TextColor3 = Color3.new(1, 1, 1)
 _Credit.TextScaled = true
 _Credit.TextSize = 14
@@ -397,6 +396,7 @@ local function BSMBHub()
 			["NoRecoil"] = {
 				Display = "No Recoil";
 				DisplayOrder = 2;
+                StuckOn = true;
 				Callback = function()
 					toggleRecoil()
 					return
@@ -405,6 +405,7 @@ local function BSMBHub()
 			["FirerateToggle"] = {
 				Display = "Sonic Firerate";
 				DisplayOrder = 3;
+                StuckOn = true;
 				Callback = function()
 					toggleFireRate()
 					return
@@ -545,8 +546,11 @@ local function BSMBHub()
 				newTemplate.LayoutOrder = mod.DisplayOrder
 				newTemplate.ButtonText.Text = mod.Display
 				newTemplate.ButtonToggle.Activated:Connect(function()
-					toggles[i][modName] = not toggles[i][modName]
-					mod.Callback()
+                    if mods[i][modName].StuckOn and toggles[i][modName] == true then
+					   warn("BSMB Hub: Mod "..tostirng(mods[i][modName].Display).." can't be disabled.")
+                    end
+                     toggles[i][modName] = not toggles[i][modName]
+                        mod.Callback()
 					if toggles[i][modName] then
 						newTemplate.ButtonToggle.Image = 'http://www.roblox.com/asset/?id='..ToggledImages["Enabled"]
 					else
@@ -597,46 +601,77 @@ local function BSMBHub()
 	end
 
 	--// Mods Controller
+    local function resethitbox(char, excl)
+        local exclude = excl or {}
+        local headhitbox = (isRolve and char.HeadHB or char.Head)
+        if not table.find(exclude, "Humanoid") then
+            char.HumanoidRootPart.Transparency = 1
+		    char.HumanoidRootPart.Size = Vector3.new(2,2,2)
+        end
+        if not table.find(exclude, "Knife") then
+            char.Hitbox.Transparency = 1
+	    	char.Hitbox.Size = Vector3.new(4.5,3.2, 3.2)
+        end
+        if not table.find(exclude, "Head") then
+	    	headhitbox.Transparency = 1
+		    headhitbox.Size = Vector3.new(1.45,1.3,1.3)
+        end
+	    if not table.find(exclude, "Body") then
+            char.RightUpperLeg.CanCollide = true
+            char.RightUpperLeg.Transparency = 0
+            char.RightUpperLeg.Size = Vector3.new(1,1.5,1)
+            char.LeftUpperLeg.CanCollide = true
+            char.LeftUpperLeg.Transparency = 0
+            char.LeftUpperLeg.Size = Vector3.new(1,1.5,1)
+        end
+    end
 	local function hitbox(target)
 		--print("Attempting to add hitbox extension for: "..target.Name)
+        local char = target.Character
+        local mhs = toggles["Aim"]["MoreHeadshots"] == true
+		local headhitbox = (isRolve and char.HeadHB or char.Head)
+		local hbSize = getgenv().HitboxSize or 13
 		if toggles["Aim"]["TeammateESP"] then
 			if target.Team == plr.Team then
 				--	warn("Player is teammate: "..target.Name)
+                resethitbox(char)
 				return
 			end
 		end
 		--warn("Adding hitbox extension for: "..target.Name)
-		local char = target.Character
-		local headhitbox = (isRolve and char.HeadHB or char.Head)
-		local hbSize = getgenv().HitboxSize or 13
 		headhitbox.CanCollide = false
 		headhitbox.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
 		headhitbox.Size = Vector3.new(hbSize,hbSize,hbSize)
 		char.HumanoidRootPart.CanCollide = false
 		char.HumanoidRootPart.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
-		char.HumanoidRootPart.Size = Vector3.new(hbSize,hbSize, hbSize)
-		if toggles["Aim"]["KnifeHitbox"] and char:FindFirstChild("Hitbox") then
+		char.HumanoidRootPart.Size = Vector3.new(hbSize,hbSize,hbSize)
+        if mhs == false then
+            char.RightUpperLeg.CanCollide = false
+		    char.RightUpperLeg.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
+		    char.RightUpperLeg.Size = Vector3.new(hbSize,hbSize,hbSize)
+            char.LeftUpperLeg.CanCollide = false
+		    char.LeftUpperLeg.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
+		    char.LeftUpperLeg.Size = Vector3.new(hbSize,hbSize,hbSize)
+        else
+             resethitbox(char, {"Head", "Knife", "Humanoid"})
+        end
+		--	warn(toggles["Aim"]["MoreHeadshots"])
+        if toggles["Aim"]["KnifeHitbox"] and char:FindFirstChild("Hitbox") then
 			--warn("Adding Knife HB.")
 			char.Hitbox.CanCollide = false
 			char.Hitbox.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
 			char.Hitbox.Size = Vector3.new(hbSize,hbSize, hbSize)
 		end
-		--	warn(toggles["Aim"]["MoreHeadshots"])
-		if toggles["Aim"]["MoreHeadshots"] ~= true then
-			--warn("Adding Leg HB.")
-			char.RightUpperLeg.CanCollide = false
-			char.RightUpperLeg.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
-			char.RightUpperLeg.Size = Vector3.new(hbSize,hbSize,hbSize)
-			char.LeftUpperLeg.CanCollide = false
-			char.LeftUpperLeg.Transparency = (toggles["Aim"]["VisibleHitboxes"] and 0.5 or 1)
-			char.LeftUpperLeg.Size = Vector3.new(hbSize,hbSize,hbSize)
-		else
-			char.RightUpperLeg.Size = Vector3.new(.1,.1,.1)
-			char.RightUpperLeg.Size = Vector3.new(.1,.1,.1)
-		end
 	end
 	function toggleSilentAim()
 		coroutine.resume(coroutine.create(function()
+          if not toggles["Aim"]["SilentAim"] then  
+                for _,v in pairs(game.Players:GetPlayers()) do
+                    if v.Name ~= plr.Name and v.Character then
+                        resethitbox(v.Character)
+                    end
+                end
+            end
 			while toggles["Aim"]["SilentAim"] do
 				coroutine.resume(coroutine.create(function()
 					for _,v in pairs(game.Players:GetPlayers()) do
@@ -672,10 +707,10 @@ local function BSMBHub()
 				task.wait(5)
 			end
 		end)()
-		for i, v in pairs(WepClone:GetChildren()) do
+		--[[for i, v in pairs(WepClone:GetChildren()) do
 			WeaponsFold[v.Name]:Destroy()
 			v.Parent = WeaponsFold
-		end
+		end]]
 	end
 	function toggleRecoil()
 		coroutine.wrap(function()
@@ -691,10 +726,10 @@ local function BSMBHub()
 				task.wait(5)
 			end
 		end)()
-		for i, v in pairs(WepClone:GetChildren()) do
+		--[[for i, v in pairs(WepClone:GetChildren()) do
 			WeaponsFold[v.Name]:Destroy()
 			v.Parent = WeaponsFold
-		end
+		end]]
 	end
 	function toggleSonicSpeed()
 		if toggles["Player"]["SonicSpeed"] then
